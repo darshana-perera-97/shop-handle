@@ -40,6 +40,15 @@ export function CloseIcon({ className = 'w-5 h-5' }) {
   );
 }
 
+export function PencilIcon({ className = 'w-5 h-5' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M12 20h9" strokeLinecap="round" />
+      <path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function DashboardIcon({ className = 'w-5 h-5' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -193,11 +202,32 @@ export function ChequeIcon({ className = 'w-5 h-5' }) {
   );
 }
 
+export function IntegrationsIcon({ className = 'w-5 h-5' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M12 2v6M12 16v6" strokeLinecap="round" />
+      <path d="M4.93 4.93l4.24 4.24M14.83 14.83l4.24 4.24" strokeLinecap="round" />
+      <path d="M2 12h6M16 12h6" strokeLinecap="round" />
+      <path d="M4.93 19.07l4.24-4.24M14.83 9.17l4.24-4.24" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
 export function RevenueIcon({ className = 'w-5 h-5' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path d="M3 17l6-6 4 4 8-10" />
       <path d="M17 5h4v4" />
+    </svg>
+  );
+}
+
+export function LogoutIcon({ className = 'w-5 h-5' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

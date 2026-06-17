@@ -6,7 +6,9 @@ import {
   UsersIcon,
   OverdueIcon,
   ChequeIcon,
+  IntegrationsIcon,
 } from '../components/icons';
+import { customers as defaultCustomers } from '../data/mockData';
 
 export const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: DashboardIcon, path: '/' },
@@ -16,9 +18,16 @@ export const navItems = [
   { id: 'users', label: 'Users', icon: UsersIcon, path: '/users' },
   { id: 'overdue', label: 'Overdue Bills', icon: OverdueIcon, path: '/overdue-bills' },
   { id: 'cheques', label: 'Cheques', icon: ChequeIcon, path: '/cheques' },
+  { id: 'integrations', label: 'Integrations', icon: IntegrationsIcon, path: '/integrations' },
 ];
 
-export function getPageTitle(pathname) {
+export function getPageTitle(pathname, customerList = defaultCustomers) {
+  const customerMatch = pathname.match(/^\/customers\/(\d+)$/);
+  if (customerMatch) {
+    const customer = customerList.find((item) => item.id === Number(customerMatch[1]));
+    return customer?.name ?? 'Customer';
+  }
+
   const item = navItems.find(({ path }) =>
     path === '/' ? pathname === '/' : pathname.startsWith(path)
   );

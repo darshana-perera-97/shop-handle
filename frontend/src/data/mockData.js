@@ -1,9 +1,11 @@
+export const DEFAULT_OVERDUE_DAYS = 14;
+
 export const customers = [
-  { id: 1, name: 'Rajesh Hardware', phone: '+94 77 123 4567', customerType: 'Shop', address: '45 Main St, Colombo', balance: 125000, status: 'active' },
-  { id: 2, name: 'Sunrise Traders', phone: '+94 71 234 5678', customerType: 'Shop', address: '12 Galle Rd, Dehiwala', balance: 48200, status: 'active' },
-  { id: 3, name: 'Metro Supplies', phone: '+94 76 345 6789', customerType: 'Construction', address: '88 Kandy Rd, Kadawatha', balance: 0, status: 'active' },
-  { id: 4, name: 'Green Valley Stores', phone: '+94 70 456 7890', customerType: 'Shop', address: '3 Lake Rd, Negombo', balance: 67800, status: 'active' },
-  { id: 5, name: 'City Mart', phone: '+94 75 567 8901', customerType: 'Person', address: '22 High St, Kurunegala', balance: 234500, status: 'overdue' },
+  { id: 1, name: 'Rajesh Hardware', phone: '+94 77 123 4567', customerType: 'Shop', address: '45 Main St, Colombo', startingBalance: 125000, balance: 125000, status: 'active', overdueDays: 14 },
+  { id: 2, name: 'Sunrise Traders', phone: '+94 71 234 5678', customerType: 'Shop', address: '12 Galle Rd, Dehiwala', startingBalance: 48200, balance: 48200, status: 'active', overdueDays: 14 },
+  { id: 3, name: 'Metro Supplies', phone: '+94 76 345 6789', customerType: 'Construction', address: '88 Kandy Rd, Kadawatha', startingBalance: 0, balance: 0, status: 'active', overdueDays: 14 },
+  { id: 4, name: 'Green Valley Stores', phone: '+94 70 456 7890', customerType: 'Shop', address: '3 Lake Rd, Negombo', startingBalance: 67800, balance: 67800, status: 'active', overdueDays: 14 },
+  { id: 5, name: 'City Mart', phone: '+94 75 567 8901', customerType: 'Person', address: '22 High St, Kurunegala', startingBalance: 234500, balance: 234500, status: 'overdue', overdueDays: 14 },
 ];
 
 export const bills = [
@@ -29,8 +31,8 @@ export const users = [
 ];
 
 export const cheques = [
-  { id: 'CHQ-8821', customer: 'Metro Supplies', bank: 'Commercial Bank', chequeNo: '452189', amount: 52000, receivedDate: '2026-06-16', bankDate: '2026-06-20', status: 'to-bank' },
-  { id: 'CHQ-8820', customer: 'Rajesh Hardware', bank: 'Sampath Bank', chequeNo: '778234', amount: 35000, receivedDate: '2026-06-12', bankDate: '2026-06-18', status: 'to-bank' },
+  { id: 'CHQ-8821', customer: 'Metro Supplies', bank: 'Commercial Bank', chequeNo: '452189', amount: 52000, receivedDate: '2026-06-16', bankDate: '2026-06-16', status: 'to-bank' },
+  { id: 'CHQ-8820', customer: 'Rajesh Hardware', bank: 'Sampath Bank', chequeNo: '778234', amount: 35000, receivedDate: '2026-06-12', bankDate: '2026-06-14', status: 'to-bank' },
   { id: 'CHQ-8819', customer: 'City Mart', bank: 'HNB', chequeNo: '991045', amount: 20000, receivedDate: '2026-06-10', bankDate: '2026-06-14', status: 'deposited' },
   { id: 'CHQ-8818', customer: 'Sunrise Traders', bank: 'BOC', chequeNo: '334567', amount: 18500, receivedDate: '2026-06-08', bankDate: '2026-06-12', status: 'cleared' },
 ];
@@ -68,4 +70,18 @@ export function formatCurrency(amount) {
 
 export function getOverdueBills() {
   return bills.filter((b) => b.status === 'overdue');
+}
+
+function toLocalDateString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/** Pending cheques whose bank date is today or earlier. */
+export function getChequesReadyToBank(chequeList, referenceDate = toLocalDateString()) {
+  return chequeList
+    .filter((cheque) => cheque.status === 'to-bank' && cheque.bankDate <= referenceDate)
+    .sort((a, b) => a.bankDate.localeCompare(b.bankDate));
 }

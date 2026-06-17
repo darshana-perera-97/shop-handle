@@ -3,11 +3,50 @@ import DataTable from '../components/DataTable';
 import StatCard from '../components/StatCard';
 import StatusBadge from '../components/StatusBadge';
 import { ChequeIcon } from '../components/icons';
-import { cheques, formatCurrency } from '../data/mockData';
+import { formatCurrency, getChequesReadyToBank } from '../data/mockData';
+import useAppData from '../context/AppDataContext';
 
 export default function ChequesPage() {
-  const toBank = cheques.filter((c) => c.status === 'to-bank');
+  const { chequeList, setChequeList } = useAppData();
+
+  const toBank = chequeList.filter((c) => c.status === 'to-bank');
+  const readyToBank = getChequesReadyToBank(chequeList);
   const totalToBank = toBank.reduce((sum, c) => sum + c.amount, 0);
+
+  function markDeposited(chequeId) {
+    setChequeList((prev) =>
+      prev.map((cheque) =>
+        cheque.id === chequeId ? { ...cheque, status: 'deposited' } : cheque,
+      ),
+    );
+  }
+
+  const readyToBankColumns = [
+    { key: 'customer', label: 'Customer' },
+    { key: 'bank', label: 'Bank' },
+    { key: 'chequeNo', label: 'Cheque No.' },
+    {
+      key: 'amount',
+      label: 'Amount',
+      render: (row) => (
+        <span className="font-bold text-doc-primary">{formatCurrency(row.amount)}</span>
+      ),
+    },
+    { key: 'bankDate', label: 'Bank Date' },
+    {
+      key: 'actions',
+      label: '',
+      render: (row) => (
+        <button
+          type="button"
+          onClick={() => markDeposited(row.id)}
+          className="rounded-xl bg-doc-primary px-4 py-2 text-xs font-semibold text-white transition hover:bg-doc-primary-dark"
+        >
+          Mark deposited
+        </button>
+      ),
+    },
+  ];
 
   const columns = [
     { key: 'id', label: 'Cheque ID' },
@@ -53,13 +92,13 @@ export default function ChequesPage() {
         />
         <StatCard
           title="Deposited"
-          value={cheques.filter((c) => c.status === 'deposited').length}
+          value={chequeList.filter((c) => c.status === 'deposited').length}
           icon={ChequeIcon}
           accent="warning"
         />
         <StatCard
           title="Cleared"
-          value={cheques.filter((c) => c.status === 'cleared').length}
+          value={chequeList.filter((c) => c.status === 'cleared').length}
           icon={ChequeIcon}
           accent="teal"
         />
@@ -67,40 +106,17 @@ export default function ChequesPage() {
 
       <section>
         <h2 className="mb-4 text-lg font-bold text-doc-navy">Ready to bank</h2>
-        <div className="flex flex-col gap-2.5">
-          {toBank.length === 0 ? (
-            <div className="rounded-2xl border border-doc-border bg-white p-6 text-center shadow-card">
-              <p className="text-sm text-doc-muted">No cheques pending banking.</p>
-            </div>
-          ) : (
-            toBank.map((cheque) => (
-              <div
-                key={cheque.id}
-                className="flex flex-wrap items-center gap-4 rounded-2xl border-2 border-doc-primary bg-white px-5 py-4 shadow-sm shadow-doc-primary/10"
-              >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-doc-primary-light text-doc-primary">
-                  <ChequeIcon />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-doc-navy">{cheque.customer}</p>
-                  <p className="text-xs text-doc-muted">
-                    {cheque.bank} · #{cheque.chequeNo} · Bank on {cheque.bankDate}
-                  </p>
-                </div>
-                <span className="text-lg font-bold text-doc-primary">{formatCurrency(cheque.amount)}</span>
-                <button
-                  type="button"
-                  className="rounded-xl bg-doc-primary px-4 py-2 text-xs font-semibold text-white transition hover:bg-doc-primary-dark"
-                >
-                  Mark deposited
-                </button>
-              </div>
-            ))
-          )}
-        </div>
+        <p className="-mt-2 mb-4 text-sm text-doc-muted">
+          Cheques whose deposit date has passed and are still waiting to be banked.
+        </p>
+        <DataTable
+          columns={readyToBankColumns}
+          data={readyToBank}
+          emptyMessage="No overdue cheques pending deposit."
+        />
       </section>
 
-      <DataTable columns={columns} data={cheques} emptyMessage="No cheques on record." />
+      <DataTable columns={columns} data={chequeList} emptyMessage="No cheques on record." />
     </div>
   );
 }

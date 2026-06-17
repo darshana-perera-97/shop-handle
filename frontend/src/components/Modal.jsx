@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { CloseIcon } from './icons';
 
-export default function Modal({ open, onClose, title, children }) {
+export default function Modal({ open, onClose, title, children, wide = false }) {
   useEffect(() => {
     if (!open) return undefined;
 
@@ -33,9 +33,11 @@ export default function Modal({ open, onClose, title, children }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className="relative z-10 w-full max-w-lg rounded-3xl border border-doc-border bg-white p-6 shadow-float"
+        className={`relative z-10 flex max-h-[calc(100dvh-2rem)] w-full flex-col overflow-hidden rounded-3xl border border-doc-border bg-white shadow-float ${
+          wide ? 'max-w-2xl' : 'max-w-lg'
+        }`}
       >
-        <div className="mb-5 flex items-start justify-between gap-4">
+        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-doc-border px-6 py-5">
           <h2 id="modal-title" className="text-lg font-bold text-doc-navy">
             {title}
           </h2>
@@ -49,7 +51,7 @@ export default function Modal({ open, onClose, title, children }) {
           </button>
         </div>
 
-        {children}
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">{children}</div>
       </div>
     </div>
   );

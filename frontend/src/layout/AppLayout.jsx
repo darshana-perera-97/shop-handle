@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom';
+import CopyrightBar from '../components/CopyrightBar';
 import Sidebar from '../components/Sidebar';
 import TopNavbar from '../components/TopNavbar';
 
@@ -11,6 +12,7 @@ export default function AppLayout() {
         <main className="flex-1 overflow-y-auto overscroll-contain bg-doc-bg p-6 lg:p-8">
           <Outlet />
         </main>
+        <CopyrightBar />
       </div>
     </div>
   );

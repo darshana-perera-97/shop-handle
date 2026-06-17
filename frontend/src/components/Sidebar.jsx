@@ -1,10 +1,21 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import useSidebarExpanded from '../hooks/useSidebarExpanded';
+import useAuth from '../context/AuthContext';
+import useShop from '../context/ShopContext';
 import { navItems } from '../config/navigation';
-import { ChevronLeftIcon, ChevronRightIcon } from './icons';
+import { ChevronLeftIcon, ChevronRightIcon, LogoutIcon } from './icons';
 
 export default function Sidebar() {
   const { expanded, toggle } = useSidebarExpanded();
+  const { shop } = useShop();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const initials = (user?.username || 'AD').slice(0, 2).toUpperCase();
+
+  async function handleLogout() {
+    await logout();
+    navigate('/login');
+  }
 
   return (
     <aside
@@ -19,15 +30,25 @@ export default function Sidebar() {
       >
         <div className={expanded ? 'min-w-0' : 'flex justify-center'}>
           {expanded ? (
-            <div className="text-lg font-bold leading-tight text-doc-primary">
-              Shop <span className="text-doc-navy">Handle</span>
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-doc-primary text-xs font-bold text-white shadow-md shadow-doc-primary/30">
+                {shop.shortName}
+              </div>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-bold leading-tight text-doc-primary">
+                  {shop.name}
+                </div>
+                {shop.city ? (
+                  <p className="truncate text-xs text-doc-muted">{shop.city}</p>
+                ) : null}
+              </div>
             </div>
           ) : (
             <div
               className="flex h-10 w-10 items-center justify-center rounded-xl bg-doc-primary text-sm font-bold text-white shadow-md shadow-doc-primary/30"
-              title="Shop Handle"
+              title={shop.name}
             >
-              SH
+              {shop.shortName}
             </div>
           )}
         </div>
@@ -70,22 +91,41 @@ export default function Sidebar() {
       </nav>
 
       <div
-        className={`mt-auto flex gap-2 ${
-          expanded ? 'w-full items-center px-1' : 'flex-col items-center'
+        className={`mt-auto flex flex-col gap-3 ${
+          expanded ? 'w-full' : 'items-center'
         }`}
       >
-        <div className="relative shrink-0">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-doc-primary-light text-sm font-semibold text-doc-primary">
-            AD
+        <div
+          className={`flex gap-2 ${
+            expanded ? 'w-full items-center px-1' : 'flex-col items-center'
+          }`}
+        >
+          <div className="relative shrink-0">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-doc-primary-light text-sm font-semibold text-doc-primary">
+              {initials}
+            </div>
+            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-doc-teal" />
           </div>
-          <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-doc-teal" />
+          {expanded && (
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-doc-navy">{user?.username || 'Admin'}</p>
+              <p className="truncate text-xs text-doc-muted">Signed in</p>
+            </div>
+          )}
         </div>
-        {expanded && (
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-doc-navy">Admin User</p>
-            <p className="truncate text-xs text-doc-muted">admin@shop.lk</p>
-          </div>
-        )}
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          title="Sign out"
+          aria-label="Sign out"
+          className={`flex items-center rounded-xl text-doc-muted transition-colors hover:bg-red-50 hover:text-red-600 ${
+            expanded ? 'w-full gap-3 px-3 py-2.5' : 'h-11 w-11 justify-center'
+          }`}
+        >
+          <LogoutIcon className="h-5 w-5 shrink-0" />
+          {expanded && <span className="truncate text-sm font-medium">Sign out</span>}
+        </button>
       </div>
     </aside>
   );

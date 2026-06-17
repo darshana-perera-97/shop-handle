@@ -3,10 +3,13 @@ import DataTable from '../components/DataTable';
 import StatCard from '../components/StatCard';
 import StatusBadge from '../components/StatusBadge';
 import { OverdueIcon, PatientsIcon } from '../components/icons';
-import { getOverdueBills, formatCurrency } from '../data/mockData';
+import { getOverdueBills } from '../data/customerHelpers';
+import { formatCurrency } from '../data/mockData';
+import useAppData from '../context/AppDataContext';
 
 export default function OverdueBillsPage() {
-  const overdueBills = getOverdueBills();
+  const { billList } = useAppData();
+  const overdueBills = getOverdueBills(billList);
   const totalOverdue = overdueBills.reduce((sum, b) => sum + (b.amount - b.paid), 0);
   const uniqueCustomers = [...new Set(overdueBills.map((b) => b.customer))];
 

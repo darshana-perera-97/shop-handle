@@ -1,16 +1,24 @@
 import { useLocation } from 'react-router-dom';
 import { getPageTitle } from '../config/navigation';
+import useAuth from '../context/AuthContext';
+import { useCustomers } from '../context/CustomersContext';
+import useShop from '../context/ShopContext';
 import { BellIcon, SearchIcon } from './icons';
 
 export default function TopNavbar() {
   const { pathname } = useLocation();
-  const pageTitle = getPageTitle(pathname);
+  const { user } = useAuth();
+  const { customerList } = useCustomers();
+  const { shop } = useShop();
+  const pageTitle = getPageTitle(pathname, customerList);
+  const initials = (user?.username || 'AD').slice(0, 2).toUpperCase();
 
   return (
     <header className="z-20 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-doc-border/60 bg-white px-6 lg:px-8">
       <div className="min-w-0">
         <p className="truncate text-xs font-medium uppercase tracking-wide text-doc-muted">
-          Shop Handle
+          {shop.name}
+          {shop.city ? ` · ${shop.city}` : ''}
         </p>
         <h2 className="truncate text-lg font-bold text-doc-navy">{pageTitle}</h2>
       </div>
@@ -38,12 +46,11 @@ export default function TopNavbar() {
 
         <div className="hidden items-center gap-3 border-l border-doc-border/60 pl-4 sm:flex">
           <div className="text-right">
-            <p className="text-sm font-semibold text-doc-navy">Admin User</p>
-            <p className="text-xs text-doc-muted">admin@shop.lk</p>
+            <p className="text-sm font-semibold text-doc-navy">{user?.username || 'Admin'}</p>
           </div>
           <div className="relative shrink-0">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-doc-primary-light text-sm font-semibold text-doc-primary">
-              AD
+              {initials}
             </div>
             <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-doc-teal" />
           </div>
