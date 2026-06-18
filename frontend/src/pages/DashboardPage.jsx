@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import StatCard from '../components/StatCard';
+import CashFlowLineChart from '../components/CashFlowLineChart';
+import MonthlyRevenueChart from '../components/MonthlyRevenueChart';
 import {
   RevenueIcon,
   BillsIcon,
@@ -14,6 +16,7 @@ import {
 import useAppData from '../context/AppDataContext';
 import {
   computeDashboardStats,
+  computeDailyCashFlow,
   computeMonthlyRevenue,
   computeRecentActivity,
 } from '../data/dashboardHelpers';
@@ -28,6 +31,8 @@ const activityStyles = {
 
 export default function DashboardPage() {
   const {
+    loading,
+    error,
     customerList,
     billList,
     paymentList,
@@ -57,11 +62,87 @@ export default function DashboardPage() {
     [billList, paymentList, chequeList],
   );
 
-  const maxRevenue = Math.max(...monthlyRevenue.map((month) => month.amount), 1);
+  const dailyCashFlow = useMemo(
+    () => computeDailyCashFlow(paymentList, billList),
+    [paymentList, billList],
+  );
+
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader title="Dashboard" subtitle="Full view of shop analytics" />
+        <div className="rounded-2xl border border-doc-border bg-white px-5 py-8 text-center shadow-card">
+          <p className="text-sm text-doc-muted">Loading shop data...</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[1, 2, 3, 4].map((item) => (
+            <div
+              key={item}
+              className="h-28 animate-pulse rounded-2xl border border-doc-border bg-white shadow-card"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader title="Dashboard" subtitle="Full view of shop analytics" />
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-6 shadow-card">
+          <p className="text-sm font-semibold text-red-600">Could not load dashboard data</p>
+          <p className="mt-1 text-sm text-red-500">{error}</p>
+          <p className="mt-3 text-xs text-doc-muted">
+            Make sure the backend is running and you are signed in.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Dashboard" subtitle="Full view of shop analytics" />
+
+      <div className="relative overflow-hidden rounded-2xl border border-doc-primary/10 bg-gradient-to-r from-doc-primary-light/50 via-white to-white px-4 py-3 shadow-card sm:px-5 sm:py-3.5">
+        <div
+          className="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full bg-doc-primary/10"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-doc-primary to-doc-teal"
+          aria-hidden
+        />
+        <div className="relative flex flex-col gap-3 pl-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:pl-4">
+          <div className="flex min-w-0 flex-1 flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-6">
+            <div className="min-w-0 shrink-0">
+              <h2 className="text-base font-bold tracking-tight text-doc-navy sm:text-lg">Welcome back!</h2>
+              <p className="mt-0.5 text-xs leading-snug text-doc-muted sm:text-sm">
+                You have {dashboardStats.chequesToBank} cheques to bank and{' '}
+                {formatCurrency(dashboardStats.overdueAmount)} in overdue bills.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                to="/overdue-bills"
+                className="rounded-xl bg-doc-primary px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm shadow-doc-primary/20 transition hover:bg-doc-primary-dark sm:px-4 sm:py-2 sm:text-sm"
+              >
+                View overdue bills
+              </Link>
+              <Link
+                to="/cash-in"
+                className="rounded-xl border border-doc-primary/30 bg-white/80 px-3.5 py-1.5 text-xs font-semibold text-doc-primary backdrop-blur-sm transition hover:border-doc-primary hover:bg-doc-primary-light sm:px-4 sm:py-2 sm:text-sm"
+              >
+                Record payment
+              </Link>
+            </div>
+          </div>
+          <div className="hidden shrink-0 sm:block [&_svg]:w-24">
+            <ShopIllustration />
+          </div>
+        </div>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
@@ -124,63 +205,9 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex flex-col gap-6 lg:col-span-8">
-          <div className="relative overflow-hidden rounded-3xl bg-white p-6 shadow-card">
-            <div
-              className="absolute inset-0 opacity-40"
-              style={{
-                backgroundImage:
-                  'radial-gradient(circle at 20% 80%, #E8F0FE 0%, transparent 50%), radial-gradient(circle at 80% 20%, #E8F0FE 0%, transparent 40%)',
-              }}
-            />
-            <div className="relative flex items-center justify-between gap-4">
-              <div className="max-w-sm">
-                <h2 className="text-xl font-bold text-doc-navy">Welcome back!</h2>
-                <p className="mt-2 text-sm leading-relaxed text-doc-muted">
-                  You have {dashboardStats.chequesToBank} cheques to bank and{' '}
-                  {formatCurrency(dashboardStats.overdueAmount)} in overdue bills.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <Link
-                    to="/overdue-bills"
-                    className="rounded-2xl bg-doc-primary px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-doc-primary/25 transition hover:bg-doc-primary-dark"
-                  >
-                    View overdue bills
-                  </Link>
-                  <Link
-                    to="/cash-in"
-                    className="rounded-2xl border-2 border-doc-primary bg-white px-5 py-2.5 text-sm font-semibold text-doc-primary transition hover:bg-doc-primary-light"
-                  >
-                    Record payment
-                  </Link>
-                </div>
-              </div>
-              <div className="hidden shrink-0 sm:block">
-                <ShopIllustration />
-              </div>
-            </div>
-          </div>
-
           <section>
             <h2 className="mb-4 text-lg font-bold text-doc-navy">Monthly revenue</h2>
-            <div className="rounded-3xl bg-white p-6 shadow-card">
-              <div className="flex items-end justify-between gap-3" style={{ height: '160px' }}>
-                {monthlyRevenue.map(({ month, amount, isCurrent }) => (
-                  <div key={month} className="flex flex-1 flex-col items-center gap-2">
-                    <div className="flex w-full flex-1 items-end">
-                      <div
-                        className="w-full rounded-t-lg bg-doc-primary transition-all"
-                        style={{
-                          height: `${(amount / maxRevenue) * 100}%`,
-                          minHeight: amount > 0 ? '8px' : '0',
-                          opacity: isCurrent ? 1 : 0.5,
-                        }}
-                      />
-                    </div>
-                    <span className="text-xs font-medium text-doc-muted">{month}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <MonthlyRevenueChart data={monthlyRevenue} />
           </section>
 
           <section>
@@ -205,6 +232,11 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
+          </section>
+
+          <section>
+            <h2 className="mb-4 text-lg font-bold text-doc-navy">Daily cash flow</h2>
+            <CashFlowLineChart data={dailyCashFlow} />
           </section>
         </div>
       </div>

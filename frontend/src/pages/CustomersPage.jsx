@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
 import Modal from '../components/Modal';
@@ -12,6 +12,7 @@ import { getCustomerClosingBalance } from '../data/customerHelpers';
 import { formatCurrency } from '../data/mockData';
 
 export default function CustomersPage() {
+  const navigate = useNavigate();
   const { customerList, addCustomer, getNextCustomerId, defaultOverdueDays } = useCustomers();
   const { collections } = useAppData();
   const [showForm, setShowForm] = useState(false);
@@ -20,20 +21,14 @@ export default function CustomersPage() {
     {
       key: 'name',
       label: 'Customer',
-      render: (row) => (
-        <Link
-          to={`/customers/${row.id}`}
-          className="font-semibold text-doc-primary transition hover:text-doc-primary-dark hover:underline"
-        >
-          {row.name}
-        </Link>
-      ),
+      render: (row) => <span className="font-semibold text-doc-primary">{row.name}</span>,
     },
     { key: 'phone', label: 'Phone' },
-    { key: 'customerType', label: 'Customer Type' },
+    { key: 'customerType', label: 'Customer Type', filterable: true },
     {
       key: 'balance',
       label: 'Balance',
+      exportValue: (row) => formatCurrency(getCustomerClosingBalance(row, collections)),
       render: (row) => {
         const closingBalance = getCustomerClosingBalance(row, collections);
         return (
@@ -46,6 +41,8 @@ export default function CustomersPage() {
     {
       key: 'status',
       label: 'Status',
+      filterable: true,
+      exportValue: (row) => row.status,
       render: (row) => <StatusBadge status={row.status} />,
     },
   ];
@@ -96,7 +93,14 @@ export default function CustomersPage() {
         />
       </Modal>
 
-      <DataTable columns={columns} data={customerList} emptyMessage="No customers yet. Add your first customer." />
+      <DataTable
+        columns={columns}
+        data={customerList}
+        emptyMessage="No customers yet. Add your first customer."
+        title="Customers"
+        exportFileName="customers"
+        onRowClick={(row) => navigate(`/customers/${row.id}`)}
+      />
     </div>
   );
 }

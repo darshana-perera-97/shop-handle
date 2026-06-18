@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
+import DataTable from '../components/DataTable';
 import Modal from '../components/Modal';
 import CustomerForm from '../components/CustomerForm';
 import StatusBadge from '../components/StatusBadge';
@@ -51,6 +52,37 @@ export default function CustomerDetailPage() {
   const totalDebit = ledger.reduce((sum, entry) => sum + entry.debit, 0);
   const totalCredit = ledger.reduce((sum, entry) => sum + entry.credit, 0);
   const closingBalance = ledger.length ? ledger[ledger.length - 1].balance : 0;
+
+  const ledgerColumns = [
+    { key: 'date', label: 'Date' },
+    { key: 'ref', label: 'Ref' },
+    { key: 'particulars', label: 'Particulars' },
+    {
+      key: 'debit',
+      label: 'Debit',
+      exportValue: (row) => (row.debit ? formatCurrency(row.debit) : '—'),
+      render: (row) => <LedgerAmount amount={row.debit} tone="debit" />,
+    },
+    {
+      key: 'credit',
+      label: 'Credit',
+      exportValue: (row) => (row.credit ? formatCurrency(row.credit) : '—'),
+      render: (row) => <LedgerAmount amount={row.credit} tone="credit" />,
+    },
+    {
+      key: 'balance',
+      label: 'Balance',
+      exportValue: (row) => formatCurrency(row.balance),
+      render: (row) => <LedgerAmount amount={row.balance} tone="balance" />,
+    },
+    {
+      key: 'type',
+      label: 'Type',
+      filterable: true,
+      exportValue: (row) => row.type,
+      render: (row) => <span className="capitalize text-doc-muted">{row.type}</span>,
+    },
+  ];
 
   function handleEditCustomer(e) {
     e.preventDefault();
@@ -168,61 +200,14 @@ export default function CustomerDetailPage() {
       </div>
 
       <section className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-lg font-bold text-doc-navy">Account ledger</h2>
-          <p className="text-sm text-doc-muted">{ledger.length} entries</p>
-        </div>
-
-        {ledger.length === 0 ? (
-          <div className="rounded-2xl border border-doc-border bg-white p-8 text-center shadow-card">
-            <p className="text-sm text-doc-muted">No ledger entries for this customer yet.</p>
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-2xl border border-doc-border bg-white shadow-card">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px] text-left text-sm">
-                <thead>
-                  <tr className="border-b border-doc-border bg-doc-bg/50">
-                    <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-doc-muted">Date</th>
-                    <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-doc-muted">Ref</th>
-                    <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-doc-muted">Particulars</th>
-                    <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-doc-muted">Debit</th>
-                    <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-doc-muted">Credit</th>
-                    <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-doc-muted">Balance</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-doc-border/60">
-                  {ledger.map((entry, index) => (
-                    <tr key={`${entry.ref}-${entry.date}-${index}`} className="transition hover:bg-doc-primary-light/20">
-                      <td className="whitespace-nowrap px-5 py-3.5 font-medium text-doc-navy">{entry.date}</td>
-                      <td className="whitespace-nowrap px-5 py-3.5 font-medium text-doc-muted">{entry.ref}</td>
-                      <td className="px-5 py-3.5 text-doc-navy">{entry.particulars}</td>
-                      <td className="px-5 py-3.5 text-right">
-                        <LedgerAmount amount={entry.debit} tone="debit" />
-                      </td>
-                      <td className="px-5 py-3.5 text-right">
-                        <LedgerAmount amount={entry.credit} tone="credit" />
-                      </td>
-                      <td className="px-5 py-3.5 text-right">
-                        <LedgerAmount amount={entry.balance} tone="balance" />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="border-t border-doc-border bg-doc-bg/70">
-                    <td colSpan={3} className="px-5 py-3.5 text-sm font-bold text-doc-navy">
-                      Closing balance
-                    </td>
-                    <td className="px-5 py-3.5 text-right font-bold text-red-500">{formatCurrency(totalDebit)}</td>
-                    <td className="px-5 py-3.5 text-right font-bold text-doc-teal">{formatCurrency(totalCredit)}</td>
-                    <td className="px-5 py-3.5 text-right font-bold text-doc-primary">{formatCurrency(closingBalance)}</td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
-        )}
+        <h2 className="text-lg font-bold text-doc-navy">Account ledger</h2>
+        <DataTable
+          columns={ledgerColumns}
+          data={ledger}
+          emptyMessage="No ledger entries for this customer yet."
+          title={`${customer.name} Ledger`}
+          exportFileName={`${customer.name}-ledger`}
+        />
       </section>
     </div>
   );

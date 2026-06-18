@@ -8,8 +8,6 @@ import {
   ChequeIcon,
   IntegrationsIcon,
 } from '../components/icons';
-import { customers as defaultCustomers } from '../data/mockData';
-
 export const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: DashboardIcon, path: '/' },
   { id: 'customers', label: 'Customers', icon: PatientsIcon, path: '/customers' },
@@ -21,7 +19,7 @@ export const navItems = [
   { id: 'integrations', label: 'Integrations', icon: IntegrationsIcon, path: '/integrations' },
 ];
 
-export function getPageTitle(pathname, customerList = defaultCustomers) {
+export function getPageTitle(pathname, customerList = []) {
   const customerMatch = pathname.match(/^\/customers\/(\d+)$/);
   if (customerMatch) {
     const customer = customerList.find((item) => item.id === Number(customerMatch[1]));

@@ -1,35 +1,67 @@
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
 import StatCard from '../components/StatCard';
 import StatusBadge from '../components/StatusBadge';
 import { OverdueIcon, PatientsIcon } from '../components/icons';
-import { getOverdueBills } from '../data/customerHelpers';
+import { computeOverdueByCustomer, getCustomerByName, getOverdueBills } from '../data/customerHelpers';
 import { formatCurrency } from '../data/mockData';
 import useAppData from '../context/AppDataContext';
 
 export default function OverdueBillsPage() {
-  const { billList } = useAppData();
+  const navigate = useNavigate();
+  const { billList, customerList } = useAppData();
   const overdueBills = getOverdueBills(billList);
+  const overdueByCustomer = useMemo(
+    () => computeOverdueByCustomer(billList),
+    [billList],
+  );
   const totalOverdue = overdueBills.reduce((sum, b) => sum + (b.amount - b.paid), 0);
-  const uniqueCustomers = [...new Set(overdueBills.map((b) => b.customer))];
+
+  const customerColumns = [
+    {
+      key: 'customer',
+      label: 'Customer',
+      render: (row) => <span className="font-semibold text-doc-primary">{row.customer}</span>,
+    },
+    {
+      key: 'billCount',
+      label: 'Overdue Bills',
+      exportValue: (row) => `${row.billCount} bill${row.billCount > 1 ? 's' : ''}`,
+      render: (row) => `${row.billCount} bill${row.billCount > 1 ? 's' : ''}`,
+    },
+    { key: 'oldestDueDate', label: 'Oldest Due Date' },
+    {
+      key: 'totalOverdue',
+      label: 'Total Overdue',
+      exportValue: (row) => formatCurrency(row.totalOverdue),
+      render: (row) => (
+        <span className="font-semibold text-red-500">{formatCurrency(row.totalOverdue)}</span>
+      ),
+    },
+  ];
 
   const columns = [
     { key: 'id', label: 'Bill No.' },
-    { key: 'customer', label: 'Customer' },
+    { key: 'customer', label: 'Customer', filterable: true },
     { key: 'dueDate', label: 'Due Date' },
     {
       key: 'amount',
       label: 'Bill Amount',
+      exportValue: (row) => formatCurrency(row.amount),
       render: (row) => formatCurrency(row.amount),
     },
     {
       key: 'paid',
       label: 'Paid',
+      exportValue: (row) => formatCurrency(row.paid),
       render: (row) => formatCurrency(row.paid),
     },
     {
       key: 'balance',
       label: 'Overdue Balance',
+      exportValue: (row) => formatCurrency(row.amount - row.paid),
       render: (row) => (
         <span className="font-semibold text-red-500">{formatCurrency(row.amount - row.paid)}</span>
       ),
@@ -37,6 +69,7 @@ export default function OverdueBillsPage() {
     {
       key: 'status',
       label: 'Status',
+      exportValue: () => 'overdue',
       render: () => <StatusBadge status="overdue" />,
     },
   ];
@@ -73,7 +106,7 @@ export default function OverdueBillsPage() {
         />
         <StatCard
           title="Affected Customers"
-          value={uniqueCustomers.length}
+          value={overdueByCustomer.length}
           subtitle="Need follow-up"
           icon={PatientsIcon}
           accent="primary"
@@ -82,39 +115,29 @@ export default function OverdueBillsPage() {
 
       <section>
         <h2 className="mb-4 text-lg font-bold text-doc-navy">Overdue by customer</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {uniqueCustomers.map((customer) => {
-            const customerBills = overdueBills.filter((b) => b.customer === customer);
-            const customerTotal = customerBills.reduce((sum, b) => sum + (b.amount - b.paid), 0);
-            const progress = Math.min(100, (customerTotal / totalOverdue) * 100);
-
-            return (
-              <div
-                key={customer}
-                className="flex items-center gap-4 rounded-2xl border border-doc-border bg-white p-5 shadow-card"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <p className="truncate text-sm font-semibold text-doc-navy">{customer}</p>
-                    <span className="text-sm font-bold text-red-500">{formatCurrency(customerTotal)}</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-red-50">
-                    <div
-                      className="h-full rounded-full bg-red-400 transition-all"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <p className="mt-1 text-xs text-doc-muted">
-                    {customerBills.length} overdue bill{customerBills.length > 1 ? 's' : ''}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <DataTable
+          columns={customerColumns}
+          data={overdueByCustomer}
+          emptyMessage="No overdue customers. Great job!"
+          title="Overdue by Customer"
+          exportFileName="overdue-by-customer"
+          onRowClick={(row) => {
+            const customer = getCustomerByName(row.customer, customerList);
+            if (customer) navigate(`/customers/${customer.id}`);
+          }}
+        />
       </section>
 
-      <DataTable columns={columns} data={overdueBills} emptyMessage="No overdue bills. Great job!" />
+      <section>
+        <h2 className="mb-4 text-lg font-bold text-doc-navy">All overdue bills</h2>
+        <DataTable
+          columns={columns}
+          data={overdueBills}
+          emptyMessage="No overdue bills. Great job!"
+          title="Overdue Bills"
+          exportFileName="overdue-bills"
+        />
+      </section>
     </div>
   );
 }

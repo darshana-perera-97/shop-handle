@@ -1,5 +1,18 @@
 import { DEFAULT_OVERDUE_DAYS } from './mockData';
 
+function toLocalDateString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function isBillOverdue(bill, referenceDate = new Date()) {
+  const outstanding = bill.amount - bill.paid;
+  if (outstanding <= 0) return false;
+  return bill.dueDate < toLocalDateString(referenceDate);
+}
+
 export function renameCustomerReferences(oldName, newName, { bills: billList, cashIn: paymentList, cheques: chequeList }) {
   return {
     bills: billList.map((bill) =>
@@ -127,8 +140,33 @@ export function getCustomerClosingBalance(customer, collections) {
   return Number(customer.startingBalance ?? customer.balance ?? 0);
 }
 
-export function getOverdueBills(billList) {
-  return billList.filter((bill) => bill.status === 'overdue');
+export function getOverdueBills(billList, referenceDate = new Date()) {
+  return billList.filter((bill) => isBillOverdue(bill, referenceDate));
+}
+
+export function computeOverdueByCustomer(billList, referenceDate = new Date()) {
+  const overdueBills = getOverdueBills(billList, referenceDate);
+  const byCustomer = new Map();
+
+  overdueBills.forEach((bill) => {
+    const balance = bill.amount - bill.paid;
+    const existing = byCustomer.get(bill.customer) || {
+      customer: bill.customer,
+      billCount: 0,
+      totalOverdue: 0,
+      oldestDueDate: bill.dueDate,
+    };
+
+    existing.billCount += 1;
+    existing.totalOverdue += balance;
+    if (bill.dueDate < existing.oldestDueDate) {
+      existing.oldestDueDate = bill.dueDate;
+    }
+
+    byCustomer.set(bill.customer, existing);
+  });
+
+  return Array.from(byCustomer.values()).sort((a, b) => b.totalOverdue - a.totalOverdue);
 }
 
 export { DEFAULT_OVERDUE_DAYS };

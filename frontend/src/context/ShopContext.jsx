@@ -1,8 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { API_URL } from '../config/backend';
 
 const ShopContext = createContext(null);
-
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:2223';
 
 const DEFAULT_SHOP = {
   name: 'Shop Handle',
@@ -15,7 +14,7 @@ export function ShopProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/shop`)
+    fetch(`${API_URL}/shop`)
       .then(async (response) => {
         if (!response.ok) throw new Error('Failed to load shop details');
         return response.json();

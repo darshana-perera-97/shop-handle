@@ -1,9 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { API_URL } from '../config/backend';
 
 const AuthContext = createContext(null);
 
 const TOKEN_KEY = 'shop_handle_token';
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:2223';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -13,7 +13,7 @@ export function AuthProvider({ children }) {
     const token = localStorage.getItem(TOKEN_KEY);
     if (token) {
       try {
-        await fetch(`${API_BASE}/api/logout`, {
+        await fetch(`${API_URL}/logout`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = useCallback(async (username, password) => {
-    const response = await fetch(`${API_BASE}/api/login`, {
+    const response = await fetch(`${API_URL}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
@@ -50,7 +50,7 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    fetch(`${API_BASE}/api/auth/me`, {
+    fetch(`${API_URL}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(async (response) => {

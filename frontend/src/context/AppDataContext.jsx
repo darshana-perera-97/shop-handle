@@ -20,7 +20,7 @@ export function AppDataProvider({ children }) {
   const [userList, setUserList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const readyRef = useRef(false);
+  const saveEnabledRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -39,13 +39,14 @@ export function AppDataProvider({ children }) {
         setChequeList(cheques);
         setUserList(users);
         setError(null);
+        saveEnabledRef.current = true;
       } catch (loadError) {
         if (!cancelled) {
+          saveEnabledRef.current = false;
           setError(loadError.message);
         }
       } finally {
         if (!cancelled) {
-          readyRef.current = true;
           setLoading(false);
         }
       }
@@ -59,35 +60,35 @@ export function AppDataProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (!readyRef.current) return;
+    if (!saveEnabledRef.current) return;
     saveCollection('customers', customerList).catch((saveError) => {
       setError(saveError.message);
     });
   }, [customerList]);
 
   useEffect(() => {
-    if (!readyRef.current) return;
+    if (!saveEnabledRef.current) return;
     saveCollection('bills', billList).catch((saveError) => {
       setError(saveError.message);
     });
   }, [billList]);
 
   useEffect(() => {
-    if (!readyRef.current) return;
+    if (!saveEnabledRef.current) return;
     saveCollection('cashIn', paymentList).catch((saveError) => {
       setError(saveError.message);
     });
   }, [paymentList]);
 
   useEffect(() => {
-    if (!readyRef.current) return;
+    if (!saveEnabledRef.current) return;
     saveCollection('cheques', chequeList).catch((saveError) => {
       setError(saveError.message);
     });
   }, [chequeList]);
 
   useEffect(() => {
-    if (!readyRef.current) return;
+    if (!saveEnabledRef.current) return;
     saveCollection('users', userList).catch((saveError) => {
       setError(saveError.message);
     });

@@ -30,6 +30,8 @@ export default function UsersPage() {
     {
       key: 'role',
       label: 'Role',
+      filterable: true,
+      exportValue: (row) => row.role,
       render: (row) => (
         <span className="rounded-lg bg-doc-primary-light px-2.5 py-1 text-xs font-semibold text-doc-primary">
           {row.role}
@@ -39,6 +41,8 @@ export default function UsersPage() {
     {
       key: 'status',
       label: 'Status',
+      filterable: true,
+      exportValue: (row) => row.status,
       render: (row) => <StatusBadge status={row.status} />,
     },
     { key: 'lastLogin', label: 'Last Login' },
@@ -89,7 +93,13 @@ export default function UsersPage() {
         </p>
       ) : null}
 
-      <DataTable columns={columns} data={userList} emptyMessage="No users configured." />
+      <DataTable
+        columns={columns}
+        data={userList}
+        emptyMessage="No users configured."
+        title="Users"
+        exportFileName="users"
+      />
     </div>
   );
 }

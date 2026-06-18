@@ -1,7 +1,10 @@
 require("dotenv").config();
 
+const fs = require("fs/promises");
+const fsSync = require("fs");
 const http = require("http");
 const crypto = require("crypto");
+const path = require("path");
 const { readCollection, writeCollection, isValidCollection } = require("./lib/jsonStore");
 
 const PORT = process.env.PORT || 2223;
@@ -10,6 +13,26 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const SHOP_NAME = process.env.SHOP_NAME || "Shop Handle";
 const SHOP_CITY = process.env.SHOP_CITY || "";
 const SHOP_SHORT_NAME = process.env.SHOP_SHORT_NAME || "SH";
+const FRONTEND_BUILD = path.join(__dirname, "..", "frontend", "build");
+const FRONTEND_BUILD_ROOT = path.resolve(FRONTEND_BUILD);
+
+const MIME_TYPES = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".webp": "image/webp",
+  ".ico": "image/x-icon",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".txt": "text/plain; charset=utf-8",
+  ".map": "application/json; charset=utf-8",
+};
 
 const sessions = new Map();
 
@@ -32,7 +55,15 @@ function sendJson(res, statusCode, payload) {
     "Access-Control-Allow-Methods": "GET, PUT, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
   });
-  res.end(JSON.stringify(payload));
+  res.end(payload == null ? "" : JSON.stringify(payload));
+}
+
+function sendFile(res, statusCode, filePath, content) {
+  const ext = path.extname(filePath).toLowerCase();
+  res.writeHead(statusCode, {
+    "Content-Type": MIME_TYPES[ext] || "application/octet-stream",
+  });
+  res.end(content);
 }
 
 function parseBody(req) {
@@ -60,14 +91,59 @@ function parseBody(req) {
   });
 }
 
-const server = http.createServer(async (req, res) => {
-  if (req.method === "OPTIONS") {
-    sendJson(res, 204, null);
+function resolveFrontendPath(requestPath) {
+  const relativePath = requestPath === "/" ? "index.html" : requestPath.replace(/^\/+/, "");
+  const filePath = path.resolve(FRONTEND_BUILD, relativePath);
+
+  if (!filePath.startsWith(FRONTEND_BUILD_ROOT)) {
+    return null;
+  }
+
+  return filePath;
+}
+
+async function serveFrontend(req, res, url) {
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    sendJson(res, 405, { error: "Method not allowed" });
     return;
   }
 
-  const url = new URL(req.url, `http://localhost:${PORT}`);
+  if (!fsSync.existsSync(FRONTEND_BUILD)) {
+    sendJson(res, 503, {
+      error: "Frontend build not found. Run: npm run build --prefix frontend",
+    });
+    return;
+  }
 
+  const filePath = resolveFrontendPath(url.pathname);
+  if (!filePath) {
+    sendJson(res, 403, { error: "Forbidden" });
+    return;
+  }
+
+  try {
+    let resolvedPath = filePath;
+    const stat = await fs.stat(resolvedPath);
+
+    if (stat.isDirectory()) {
+      resolvedPath = path.join(resolvedPath, "index.html");
+    }
+
+    if (req.method === "HEAD") {
+      sendFile(res, 200, resolvedPath, "");
+      return;
+    }
+
+    const content = await fs.readFile(resolvedPath);
+    sendFile(res, 200, resolvedPath, content);
+  } catch {
+    const indexPath = path.join(FRONTEND_BUILD, "index.html");
+    const content = await fs.readFile(indexPath);
+    sendFile(res, 200, indexPath, content);
+  }
+}
+
+async function handleApi(req, res, url) {
   if (url.pathname === "/api/health") {
     sendJson(res, 200, { ok: true });
     return;
@@ -161,6 +237,22 @@ const server = http.createServer(async (req, res) => {
     console.error(error);
     sendJson(res, 500, { error: "Internal server error" });
   }
+}
+
+const server = http.createServer(async (req, res) => {
+  if (req.method === "OPTIONS") {
+    sendJson(res, 204, null);
+    return;
+  }
+
+  const url = new URL(req.url, `http://localhost:${PORT}`);
+
+  if (url.pathname.startsWith("/api")) {
+    await handleApi(req, res, url);
+    return;
+  }
+
+  await serveFrontend(req, res, url);
 });
 
 if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
@@ -170,4 +262,12 @@ if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
 
 server.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
+
+  if (fsSync.existsSync(FRONTEND_BUILD)) {
+    console.log(`Serving frontend from ${FRONTEND_BUILD}`);
+  } else {
+    console.warn(
+      "Frontend build not found. Build it with: npm run build --prefix frontend",
+    );
+  }
 });

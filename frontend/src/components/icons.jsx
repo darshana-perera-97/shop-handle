@@ -265,3 +265,26 @@ export function DoctorIllustration() {
     </svg>
   );
 }
+
+export function UnderConstructionIllustration({ className = 'h-auto w-56' }) {
+  return (
+    <svg viewBox="0 0 240 220" className={className} fill="none" aria-hidden>
+      <ellipse cx="120" cy="205" rx="80" ry="8" fill="#E8F0FE" />
+      <rect x="45" y="130" width="150" height="70" rx="8" fill="#fff" stroke="#2D7FF9" strokeWidth="2" />
+      <path d="M35 130 L120 75 L205 130" fill="#2D7FF9" stroke="#1A73E8" strokeWidth="2" />
+      <rect x="95" y="155" width="50" height="45" rx="4" fill="#E8F0FE" stroke="#2D7FF9" strokeWidth="1.5" />
+      <rect x="60" y="145" width="28" height="22" rx="2" fill="#E8F0FE" stroke="#2D7FF9" strokeWidth="1.5" />
+      <rect x="152" y="145" width="28" height="22" rx="2" fill="#E8F0FE" stroke="#2D7FF9" strokeWidth="1.5" />
+      <path d="M70 95 L85 60 L100 95 Z" fill="#FBBF24" stroke="#F59E0B" strokeWidth="1.5" />
+      <rect x="72" y="95" width="28" height="6" rx="2" fill="#F59E0B" />
+      <path d="M140 95 L155 60 L170 95 Z" fill="#FBBF24" stroke="#F59E0B" strokeWidth="1.5" />
+      <rect x="142" y="95" width="28" height="6" rx="2" fill="#F59E0B" />
+      <rect x="108" y="108" width="24" height="14" rx="3" fill="#4FD1C5" stroke="#38B2AC" strokeWidth="1.5" />
+      <path d="M120 108 V98" stroke="#38B2AC" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="120" cy="95" r="4" fill="#4FD1C5" stroke="#38B2AC" strokeWidth="1.5" />
+      <path d="M30 170 H210" stroke="#CBD5E1" strokeWidth="2" strokeDasharray="6 6" strokeLinecap="round" />
+      <rect x="175" y="148" width="8" height="32" rx="2" fill="#64748B" transform="rotate(25 179 164)" />
+      <rect x="188" y="138" width="22" height="10" rx="2" fill="#94A3B8" transform="rotate(25 199 143)" />
+    </svg>
+  );
+}

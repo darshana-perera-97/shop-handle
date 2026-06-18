@@ -75,22 +75,25 @@ export default function BillsPage() {
 
   const columns = [
     { key: 'id', label: 'Bill No.' },
-    { key: 'customer', label: 'Customer' },
+    { key: 'customer', label: 'Customer', filterable: true },
     { key: 'date', label: 'Date' },
     { key: 'dueDate', label: 'Due Date' },
     {
       key: 'amount',
       label: 'Amount',
+      exportValue: (row) => formatCurrency(row.amount),
       render: (row) => formatCurrency(row.amount),
     },
     {
       key: 'paid',
       label: 'Paid',
+      exportValue: (row) => formatCurrency(row.paid),
       render: (row) => formatCurrency(row.paid),
     },
     {
       key: 'balance',
       label: 'Balance',
+      exportValue: (row) => formatCurrency(row.amount - row.paid),
       render: (row) => (
         <span className={row.amount - row.paid > 0 ? 'font-semibold text-doc-primary' : 'text-doc-muted'}>
           {formatCurrency(row.amount - row.paid)}
@@ -100,6 +103,8 @@ export default function BillsPage() {
     {
       key: 'status',
       label: 'Status',
+      filterable: true,
+      exportValue: (row) => row.status,
       render: (row) => <StatusBadge status={row.status} />,
     },
   ];
@@ -342,7 +347,13 @@ export default function BillsPage() {
         </div>
       </div>
 
-      <DataTable columns={columns} data={billList} emptyMessage="No credit bills recorded." />
+      <DataTable
+        columns={columns}
+        data={billList}
+        emptyMessage="No credit bills recorded."
+        title="Credit Bills"
+        exportFileName="credit-bills"
+      />
     </div>
   );
 }

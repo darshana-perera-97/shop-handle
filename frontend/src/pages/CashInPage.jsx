@@ -4,6 +4,7 @@ import DataTable from '../components/DataTable';
 import Modal from '../components/Modal';
 import CustomerSearchSelect from '../components/CustomerSearchSelect';
 import { formatCurrency } from '../data/mockData';
+import { createChequesForPayment } from '../data/chequeHelpers';
 import useAppData from '../context/AppDataContext';
 import { useCustomers } from '../context/CustomersContext';
 
@@ -41,7 +42,7 @@ function getPaymentReference(cheques, remarks) {
 
 export default function CashInPage() {
   const { customerList } = useCustomers();
-  const { paymentList, setPaymentList } = useAppData();
+  const { paymentList, setPaymentList, chequeList, setChequeList } = useAppData();
   const [showForm, setShowForm] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [paymentDate, setPaymentDate] = useState('');
@@ -80,16 +81,17 @@ export default function CashInPage() {
 
   const columns = [
     { key: 'id', label: 'Payment No.' },
-    { key: 'customer', label: 'Customer' },
+    { key: 'customer', label: 'Customer', filterable: true },
     { key: 'date', label: 'Date' },
     {
       key: 'amount',
       label: 'Amount',
+      exportValue: (row) => formatCurrency(row.amount),
       render: (row) => (
         <span className="font-semibold text-doc-teal">{formatCurrency(row.amount)}</span>
       ),
     },
-    { key: 'method', label: 'Method' },
+    { key: 'method', label: 'Method', filterable: true },
     { key: 'reference', label: 'Reference' },
   ];
 
@@ -169,6 +171,12 @@ export default function CashInPage() {
     };
 
     setPaymentList([newPayment, ...paymentList]);
+
+    if (filledCheques.length > 0) {
+      const newCheques = createChequesForPayment(newPayment, filledCheques, chequeList);
+      setChequeList([...newCheques, ...chequeList]);
+    }
+
     setShowForm(false);
   }
 
@@ -374,7 +382,13 @@ export default function CashInPage() {
         <p className="mt-1 text-2xl font-bold text-doc-teal">{formatCurrency(totalReceived)}</p>
       </div>
 
-      <DataTable columns={columns} data={paymentList} emptyMessage="No payments recorded yet." />
+      <DataTable
+        columns={columns}
+        data={paymentList}
+        emptyMessage="No payments recorded yet."
+        title="Cash In"
+        exportFileName="cash-in"
+      />
     </div>
   );
 }

@@ -1,4 +1,5 @@
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:2223/api';
+import { API_URL } from '../config/backend';
+
 const TOKEN_KEY = 'shop_handle_token';
 
 function getAuthHeaders() {
@@ -7,7 +8,7 @@ function getAuthHeaders() {
 }
 
 async function request(collection, options = {}) {
-  const response = await fetch(`${API_BASE}/${collection}`, {
+  const response = await fetch(`${API_URL}/${collection}`, {
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeaders(),
