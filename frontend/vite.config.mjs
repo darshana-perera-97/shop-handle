@@ -9,8 +9,11 @@ export default defineConfig({
   plugins: [
     react(),
     legacy({
-      targets: ['ios >= 9'],
+      // Legacy chunks only. Modern chunks stay on the plugin default
+      // (ES2020, Safari 16.4+). Do not set build.target or modernTargets.
+      targets: ['iOS >= 9', 'Safari >= 9'],
       renderModernChunks: true,
+      modernPolyfills: false,
     }),
   ],
   build: {
