@@ -113,14 +113,6 @@ export default function ChequesPage() {
       <PageHeader
         title="Cheques"
         subtitle="Cheque lists to be banked and related details"
-        action={
-          <button
-            type="button"
-            className="rounded-2xl bg-doc-primary px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-doc-primary/25 transition hover:bg-doc-primary-dark"
-          >
-            Add cheque
-          </button>
-        }
       />
 
       <div className="grid gap-4 sm:grid-cols-3">

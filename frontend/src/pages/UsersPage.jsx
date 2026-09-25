@@ -1,12 +1,17 @@
 import { useState } from 'react';
 import PageHeader from '../components/PageHeader';
 import DataTable from '../components/DataTable';
+import Modal from '../components/Modal';
+import UserForm from '../components/UserForm';
 import StatusBadge from '../components/StatusBadge';
+import { UserPlusIcon } from '../components/icons';
 import useAppData from '../context/AppDataContext';
 
 export default function UsersPage() {
-  const { userList, removeUser } = useAppData();
+  const { userList, addUser, getNextUserId, removeUser } = useAppData();
+  const [showForm, setShowForm] = useState(false);
   const [removeError, setRemoveError] = useState('');
+  const [formError, setFormError] = useState('');
 
   function handleRemoveUser(user) {
     setRemoveError('');
@@ -22,6 +27,30 @@ export default function UsersPage() {
     }
 
     removeUser(user.id);
+  }
+
+  function handleAddUser(e) {
+    e.preventDefault();
+    setFormError('');
+
+    const form = e.target;
+    const email = form.email.value.trim().toLowerCase();
+    const duplicate = userList.some((item) => item.email.toLowerCase() === email);
+    if (duplicate) {
+      setFormError('A user with this email already exists.');
+      return;
+    }
+
+    addUser({
+      id: getNextUserId(),
+      name: form.name.value.trim(),
+      email,
+      role: form.role.value,
+      status: form.status.value,
+      lastLogin: '—',
+    });
+    form.reset();
+    setShowForm(false);
   }
 
   const columns = [
@@ -69,12 +98,30 @@ export default function UsersPage() {
         action={
           <button
             type="button"
-            className="rounded-2xl bg-doc-primary px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-doc-primary/25 transition hover:bg-doc-primary-dark"
+            onClick={() => {
+              setFormError('');
+              setShowForm(true);
+            }}
+            className="inline-flex items-center gap-2 rounded-2xl bg-doc-primary px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-doc-primary/25 transition hover:bg-doc-primary-dark"
           >
+            <UserPlusIcon />
             Add user
           </button>
         }
       />
+
+      <Modal open={showForm} onClose={() => setShowForm(false)} title="New user">
+        {formError ? (
+          <p className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {formError}
+          </p>
+        ) : null}
+        <UserForm
+          onSubmit={handleAddUser}
+          onCancel={() => setShowForm(false)}
+          submitLabel="Save user"
+        />
+      </Modal>
 
       <div className="grid gap-4 sm:grid-cols-3">
         {['Admin', 'Manager', 'Cashier'].map((role) => (

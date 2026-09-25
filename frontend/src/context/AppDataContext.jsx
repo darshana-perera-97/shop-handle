@@ -128,6 +128,15 @@ export function AppDataProvider({ children }) {
     return maxId + 1;
   }
 
+  function addUser(user) {
+    setUserList((prev) => [...prev, user]);
+  }
+
+  function getNextUserId() {
+    const maxId = userList.reduce((max, user) => Math.max(max, user.id), 0);
+    return maxId + 1;
+  }
+
   function removeUser(id) {
     setUserList((prev) => prev.filter((user) => user.id !== Number(id)));
   }
@@ -149,6 +158,8 @@ export function AppDataProvider({ children }) {
         updateCustomer,
         getCustomerById,
         getNextCustomerId,
+        addUser,
+        getNextUserId,
         removeUser,
         setBillList,
         setPaymentList,
